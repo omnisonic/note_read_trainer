@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Note Reading Speed Trainer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.3/abcjs-basic-min.min.js" integrity="sha512-a/QRwW3feYgef9u7LOmPFd5sDaDB3iY1eqT2DrI3NxJu7PUDC6ONnfGJed92aSD3+4wu9ozF7agFlmjgj3Pqbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h1>Music Note Reading Trainer</h1>
+
+<button id="instructionButton">Show Instructions</button>
+<div id="instructions" style="display: none;">
+ <p><strong>Use:</strong> Identify the displayed note and click the corresponding button. </p>
+    <p><strong>Progression:</strong> Correct answers expand the note range gradually, enhancing learning efficiency.</p>
+    <p><strong>Restart:</strong> Refresh the browser to start over.
+The two beginning notes will be reselected randomly.</p>
+</div>
+
+    <div id="sheet-music"></div>
+    <div>
+    <button id="choice1" onclick="checkAnswer(this.innerText)">C</button>
+    <button id="choice2" onclick="checkAnswer(this.innerText)">D</button>
+    <button id="choice3" onclick="checkAnswer(this.innerText)">E</button> <div id="feedback"></div></div>
+
+<script>
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    var scale = 5; // Adjust this value to enlarge or reduce the notation size
+    var allNotes = [
+        'E,,','F,,','G,,', 'A,,', 'B,,',
+        'C,', 'D,', 'E,', 'F,','G,','A,','B,',
+        'C', 'D', 'E', 'F'
+    ];
+    var startingIndex = Math.floor(Math.random() * (allNotes.length - 1)); // Random starting index ensuring two adjacent notes can be picked
+    var notes = allNotes.slice(startingIndex, startingIndex + 2); // Starting with two random adjacent notes
+    var currentNote = notes[Math.floor(Math.random() * notes.length)]; // Set the initial note randomly from the starting notes
+    var correctCount = 0; // To track the number of correct answers
+
+window.onload = function() {
+    renderNote();
+    setAnswerChoices();
+}
+document.getElementById('instructionButton').addEventListener('click', function() {
+    var instructions = document.getElementById('instructions');
+    if (instructions.style.display === 'none') {
+        instructions.style.display = 'block';
+    } else {
+        instructions.style.display = 'none';
+    }
+});
+
+// Ensure the Web Audio API is supported
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playNote(note, duration = 0.5) { // Default duration is 0.5 seconds
+    var frequencies = {
+        'E,,': 41.20, 'F,,': 43.65, 'G,,': 48.99, 'A,,': 55.00, 'B,,': 61.74,
+        'C,': 65.41, 'D,': 73.42, 'E,': 82.41, 'F,': 87.31, 'G,': 98.00, 'A,': 110.00, 'B,': 123.47,
+        'C': 130.81, 'D': 146.83, 'E': 164.81, 'F': 174.61
+    };
+
+    var frequency = frequencies[note];
+    if (!frequency) {
+        console.log('Note not found in frequencies map:', note);
+        return; // If the note is not in the map, don't play anything
+    }
+
+    frequency *= 2; // Double the frequency to play one octave higher
+
+    var oscillator = audioCtx.createOscillator();
+    var gainNode = audioCtx.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + duration);
+
+    console.log('Playing note:', note, 'Frequency:', frequency, 'Duration:', duration);
+}
+
+
+    function renderNote() {
+        var notation = 'K:C bass\nL:1/4\n' + currentNote;
+        var visualOptions = { scale: scale };
+        ABCJS.renderAbc('sheet-music', notation, visualOptions);
+    }
+
+    function setAnswerChoices() {
+        var choices = generateChoices();
+        for (var i = 1; i <= 3; i++) {
+            document.getElementById('choice' + i).innerText = choices[i - 1].replace(/[,']/g, '');
+        }
+    }
+
+function generateChoices() {
+    var shuffledNotes = allNotes.slice(); // Use allNotes instead of notes to have a larger pool
+    shuffledNotes.sort(() => 0.5 - Math.random());
+
+    // Ensure currentNote is included in the choices
+    if (!shuffledNotes.includes(currentNote)) {
+        shuffledNotes[0] = currentNote;
+    }
+
+    // Randomly pick 3 notes, ensuring currentNote is one of them
+    var choiceIndex = shuffledNotes.indexOf(currentNote);
+    var choices = [shuffledNotes[choiceIndex]];
+
+    while (choices.length < 3) {
+        var randomIndex = Math.floor(Math.random() * shuffledNotes.length);
+        if (choices.indexOf(shuffledNotes[randomIndex]) === -1) {
+            choices.push(shuffledNotes[randomIndex]);
+        }
+    }
+
+    return choices;
+}
+
+function checkAnswer(selectedNote) {
+    if (selectedNote === currentNote.replace(/[,']/g, '')) {
+        document.getElementById('feedback').innerText = 'Correct!';
+        correctCount++;
+        playNote(selectedNote); // Play the note
+
+        // Expansion logic here
+        if (correctCount % 2 === 0 && notes.length < allNotes.length) {
+            var lowestNoteIndex = allNotes.indexOf(notes[0]);
+            var highestNoteIndex = allNotes.indexOf(notes[notes.length - 1]);
+
+            if (lowestNoteIndex > 0 && highestNoteIndex < allNotes.length - 1) {
+                // Randomly decide whether to add a note above or below
+                if (Math.random() < 0.5) {
+                    notes.unshift(allNotes[lowestNoteIndex - 1]); // Add a note below
+                } else {
+                    notes.push(allNotes[highestNoteIndex + 1]); // Add a note above
+                }
+            } else if (lowestNoteIndex > 0) {
+                notes.unshift(allNotes[lowestNoteIndex - 1]); // Only add a note below
+            } else if (highestNoteIndex < allNotes.length - 1) {
+                notes.push(allNotes[highestNoteIndex + 1]); // Only add a note above
+            }
+            console.log('Current note pool:', notes);
+        }
+
+        // Continue with the rest of the existing logic
+        currentNote = notes[Math.floor(Math.random() * notes.length)];
+        renderNote();
+        setAnswerChoices();
+    } else {
+        document.getElementById('feedback').innerText = 'Try again.';
+        correctCount = 0; // Reset the count if the answer is incorrect
+    }
+}
+
+
+function handleKeyPress(event) {
+    var key = event.key.toUpperCase(); // Convert to uppercase to match button text
+    var noteButtons = document.querySelectorAll("button[id^='choice']"); // Select all note buttons
+
+    noteButtons.forEach(function(button) {
+        if (button.innerText === key) {
+            checkAnswer(button.innerText); // Call the existing checkAnswer function
+            playNote(currentNote); // Play the note using the full currentNote with octave info
+        }
+    });
+}
+
+document.addEventListener('keydown', handleKeyPress);
+
+</script>
+</body>
+</html>
