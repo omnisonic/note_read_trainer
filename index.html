@@ -3,6 +3,19 @@
 <head>
     <title>Note Reading Speed Trainer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.3/abcjs-basic-min.min.js" integrity="sha512-a/QRwW3feYgef9u7LOmPFd5sDaDB3iY1eqT2DrI3NxJu7PUDC6ONnfGJed92aSD3+4wu9ozF7agFlmjgj3Pqbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<style>
+body {
+    background-image: url('./bg_double_bass.webp'); /* Replace with your image file path */
+    background-size: cover; /* This will make sure your image covers the whole page */
+    background-repeat: no-repeat; /* This will prevent the image from repeating */
+    background-attachment: fixed; /* This will fix the background image during scrolling */
+}
+        #instructions {
+            color: white;
+            font-size: 20px;
+        }
+</style>
 </head>
 <body id="pageBody">
     <h1>Music Note Reading Trainer</h1>
@@ -17,10 +30,10 @@ The beginning notes will be reselected randomly.</p>
 </div>
 
     <div id="sheet-music"></div>
-    <div>
     <button id="choice1" onclick="checkAnswer(this.innerText)">C</button>
     <button id="choice2" onclick="checkAnswer(this.innerText)">D</button>
-    <button id="choice3" onclick="checkAnswer(this.innerText)">E</button> <div id="feedback"></div></div>
+    <button id="choice3" onclick="checkAnswer(this.innerText)">E</button>
+    <div id="feedback"></div>
 
     <script>
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -65,7 +78,7 @@ The beginning notes will be reselected randomly.</p>
                 return; // If the note is not in the map, don't play anything
             }
 
-            frequency *= 2; // Double the frequency to play one octave higher
+            frequency *= 3; // Double the frequency to play one octave higher
 
             var oscillator = audioCtx.createOscillator();
             var gainNode = audioCtx.createGain();
@@ -125,10 +138,10 @@ The beginning notes will be reselected randomly.</p>
         function flashRed() {
             if (!isFlashing) {
                 isFlashing = true;
-                document.body.style.backgroundColor = 'red'; // Change to red
+                document.body.style.color = 'red'; // Change to red
 
                 setTimeout(function() {
-                    document.body.style.backgroundColor = originalColor; // Revert to original color
+                    document.body.style.color = originalColor; // Revert to original color
                     isFlashing = false;
                 }, 300); // Duration of the flash in milliseconds
             }
@@ -188,7 +201,7 @@ The beginning notes will be reselected randomly.</p>
     document.addEventListener('keydown', handleKeyPress);
 
         var isFlashing = false;
-        var originalColor = document.body.style.backgroundColor || "white"; // Set a default color if the original color is not defined
+        var originalColor = document.body.style.color || "black"; // Set a default color if the original color is not defined
 
 
 
