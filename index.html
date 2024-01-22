@@ -2,38 +2,69 @@
 <html>
 <head>
     <title>Note Reading Speed Trainer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.3/abcjs-basic-min.min.js" integrity="sha512-a/QRwW3feYgef9u7LOmPFd5sDaDB3iY1eqT2DrI3NxJu7PUDC6ONnfGJed92aSD3+4wu9ozF7agFlmjgj3Pqbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Bootstrap CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-<style>
-body {
-    background-image: url('./bg_double_bass.webp'); /* Replace with your image file path */
-    background-size: cover; /* This will make sure your image covers the whole page */
-    background-repeat: no-repeat; /* This will prevent the image from repeating */
-    background-attachment: fixed; /* This will fix the background image during scrolling */
-}
-        #instructions {
-            color: white;
-            font-size: 20px;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.3/abcjs-basic-min.min.js"></script>
+    <style>
+        body {
+            background-image: url('./bg_double_bass.webp');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
-</style>
+        .highlightedText {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+         
+        }
+        .instruction-button, .choice-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: black;
+            margin: 10px;
+        }
+        .instruction-button {
+            font-size: 2em;
+    }
+        .choice-button {
+            padding: 1em;
+            font-size: 3em;
+    }
+        .container {
+            margin: 6em;
+    }
+        .btn-group {
+            margin: 1em;
+    }
+         #feedback {
+             font-size: 2em;
+
+    }
+    </style>
 </head>
-<body id="pageBody">
-    <h1>Music Note Reading Trainer</h1>
+<body id="pageBody" class="container">
+    <h1 class="text-center my-4">Music Note Reading Trainer</h1>
 
-<button id="instructionButton">Show Instructions</button>
-<div id="instructions" style="display: none;">
- <p><strong>Use:</strong> Identify the displayed note and click the corresponding button.
- You can also use the computer keyboard to type the correct note</p>
-    <p><strong>Progression:</strong> Correct answers expand the note range gradually, enhancing learning efficiency.</p>
-    <p><strong>Restart:</strong> Refresh the browser to start over.
-The beginning notes will be reselected randomly.</p>
-</div>
+    <div class="d-flex flex-column align-items-center">
+        <button id="instructionButton" class="btn instruction-button">Instructions</button>
+        <div id="instructions" class="highlightedText" style="display: none;">
+            <p> This tool will help you memorize note reading quickly... </p>
+        </div>
+        <p><div id="feedback" class="text-white"></div></p>
+        <div id="sheet-music"></div>
+        <div class="btn-group" role="group" aria-label="Note choices">
+            <button id="choice1" class="btn btn-lg choice-button" onclick="checkAnswer(this.innerText)">C</button>
+            <button id="choice2" class="btn btn-lg choice-button" onclick="checkAnswer(this.innerText)">D</button>
+            <button id="choice3" class="btn btn-lg choice-button" onclick="checkAnswer(this.innerText)">E</button>
+        </div>
+    </div>
 
-    <div id="sheet-music"></div>
-    <button id="choice1" onclick="checkAnswer(this.innerText)">C</button>
-    <button id="choice2" onclick="checkAnswer(this.innerText)">D</button>
-    <button id="choice3" onclick="checkAnswer(this.innerText)">E</button>
-    <div id="feedback"></div>
+    <!-- Optional: Include Bootstrap JS -->
+    <!-- Latest compiled and minified JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
 
     <script>
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -112,28 +143,35 @@ The beginning notes will be reselected randomly.</p>
             }
         }
 
-        function generateChoices() {
-            var shuffledNotes = allNotes.slice(); // Use allNotes instead of notes to have a larger pool
-            shuffledNotes.sort(() => 0.5 - Math.random());
+function generateChoices() {
+    var shuffledNotes = allNotes.slice(); // Use allNotes instead of notes to have a larger pool
+    shuffledNotes.sort(() => 0.5 - Math.random());
 
-            // Ensure currentNote is included in the choices
-            if (!shuffledNotes.includes(currentNote)) {
-                shuffledNotes[0] = currentNote;
-            }
+    // Ensure currentNote is included in the choices
+    if (!shuffledNotes.includes(currentNote)) {
+        shuffledNotes[0] = currentNote;
+    }
 
-            // Randomly pick 3 notes, ensuring currentNote is one of them
-            var choiceIndex = shuffledNotes.indexOf(currentNote);
-            var choices = [shuffledNotes[choiceIndex]];
-
-            while (choices.length < 3) {
-                var randomIndex = Math.floor(Math.random() * shuffledNotes.length);
-                if (choices.indexOf(shuffledNotes[randomIndex]) === -1) {
-                    choices.push(shuffledNotes[randomIndex]);
-                }
-            }
-
-            return choices;
+    // Randomly pick 3 notes, ensuring currentNote is one of them
+    var choices = [];
+    while (choices.length < 3) {
+        var randomIndex = Math.floor(Math.random() * shuffledNotes.length);
+        var note = shuffledNotes[randomIndex];
+        if (!choices.includes(note)) {
+            choices.push(note);
         }
+    }
+
+    // Ensure currentNote is one of the choices
+    if (!choices.includes(currentNote)) {
+        choices[0] = currentNote; // Replace one choice with the current note
+    }
+
+    // Shuffle the choices array
+    choices.sort(() => 0.5 - Math.random());
+
+    return choices;
+}
 
         function flashRed() {
             if (!isFlashing) {
